@@ -1,0 +1,17 @@
+{
+  "name": "recon/merlin",
+  "description": "Merlin is an easy way to share files over the web.",
+  "authors": [
+    {
+      "name": "recon"
+    }
+  ],
+  "require": {
+    "monolog/monolog": "^2.9"
+  },
+  "autoload": {
+    "psr-4": {
+      "Merlin\\": "src/"
+    }
+  }
+}
