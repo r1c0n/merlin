@@ -1,5 +1,4 @@
 <?php
-
 require 'vendor/autoload.php';
 
 use Merlin\Merlin;
@@ -19,7 +18,7 @@ $displayPath = $subdirectory ? '/' . $subdirectory . '/' : '/';
     <meta name="msapplication-TileColor" content="#b91d47">
     <meta name="msapplication-config" content="./images/favicon/browserconfig.xml">
     <meta name="theme-color" content="#ffffff">
-    <title>Merlin</title>
+    <title>Directory Listing</title>
     <link rel="apple-touch-icon" sizes="180x180" href="./images/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="./images/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="./images/favicon/favicon-16x16.png">
@@ -29,17 +28,87 @@ $displayPath = $subdirectory ? '/' . $subdirectory . '/' : '/';
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <img src="./images/merlin.png" alt="Merlin" width="240" height="86">
-    <h1>Directory Listing</h1>
-    <p>Path: <?php echo htmlspecialchars($displayPath); ?></p>
-    <pre><?php foreach ($directoryStructure as $item): ?>
-            <li><?php echo $item; ?></li>
-        <?php endforeach; ?>
-    </pre>
-    <?php if ($subdirectory): ?>
-        <a class="back-link" href="?">Back to top-level</a>
-    <?php endif; ?>
-    <hr />
-    <p>Copyright &copy; 2024 Merlin Index, All Rights and Lefts Reserved.</p>
+    <div class="container">
+        <header class="header">
+            <img src="./images/merlin.png" alt="Merlin" width="240" height="86">
+            <h1>Index of <?php echo htmlspecialchars($displayPath); ?></h1>
+            <nav class="breadcrumbs">
+                <a href="?">Home</a>
+                <?php if ($subdirectory): ?>
+                    <?php $parts = explode('/', $subdirectory); $currentPath = ''; ?>
+                    <?php foreach ($parts as $part): ?>
+                        <?php $currentPath .= ($currentPath ? '/' : '') . $part; ?>
+                        / <a href="?dir=<?= urlencode($currentPath) ?>"><?= htmlspecialchars($part) ?></a>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </nav>
+        </header>
+
+        <div class="file-browser">
+            <table class="file-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Size</th>
+                        <th>Last Modified</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ($subdirectory): ?>
+                        <tr>
+                            <td colspan="4">
+                                <a href="?dir=<?= urlencode(dirname($subdirectory)) ?>">
+                                    📁 Parent Directory
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                    
+                    <?php foreach ($directoryStructure as $item): ?>
+                        <tr>
+                            <td>
+                                <a href="<?= $item['link'] ?>">
+                                    <?php if ($item['type'] === 'folder'): ?>
+                                        📁
+                                    <?php else: ?>
+                                        📄
+                                    <?php endif; ?>
+                                    <?= htmlspecialchars($item['name']) ?>
+                                </a>
+                            </td>
+                            <td><?= ucfirst($item['type']) ?></td>
+                            <td><?= $item['type'] === 'file' ? formatSize($item['size']) : '-' ?></td>
+                            <td><?= $item['modified'] ?? '-' ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <footer>
+            <hr />
+            <p>Copyright &copy; 2024 - <?php echo date('Y'); ?> Merlin Index, All Rights and Lefts Reserved.</p>
+            <div class="powered-by">Merlin File Browser</div>
+        </footer>
+    </div>
 </body>
 </html>
+
+<?php
+function formatSize($bytes) {
+    if ($bytes >= 1073741824) {
+        return number_format($bytes / 1073741824, 2) . ' GB';
+    } elseif ($bytes >= 1048576) {
+        return number_format($bytes / 1048576, 2) . ' MB';
+    } elseif ($bytes >= 1024) {
+        return number_format($bytes / 1024, 2) . ' KB';
+    } elseif ($bytes > 1) {
+        return $bytes . ' bytes';
+    } elseif ($bytes == 1) {
+        return '1 byte';
+    } else {
+        return '0 bytes';
+    }
+}
+?>
