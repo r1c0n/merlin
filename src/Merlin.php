@@ -23,6 +23,10 @@ class Merlin
     public function listDirectory($subdirectory = '')
     {
         $directoryPath = $this->directory . ($subdirectory ? DIRECTORY_SEPARATOR . $subdirectory : '');
+        if (!is_dir($directoryPath)) {
+            $this->logger->error('Directory not found', ['directory' => $directoryPath]);
+            return ['Directory not found'];
+        }
         $this->logger->info('Listing directory.', ['directory' => $directoryPath]);
         return $this->scanDirectory($directoryPath, $subdirectory);
     }
@@ -41,10 +45,29 @@ class Merlin
             $relativePath = ($subdirectory ? $subdirectory . DIRECTORY_SEPARATOR : '') . $item;
 
             if (is_dir($path)) {
-                $output[] = 'folder - <a href="?dir=' . urlencode($relativePath) . '">' . $item . '</a>';
+                $output[] = [
+                    'type' => 'folder',
+                    'name' => $item,
+                    'path' => $relativePath,
+                    'link' => '?dir=' . urlencode($relativePath)
+                ];
             } else {
-                $output[] = 'file - <a href="content/' . urlencode($relativePath) . '">' . $item . '</a>';
+                $fileInfo = [
+                    'type' => 'file',
+                    'name' => $item,
+                    'path' => $relativePath,
+                    'link' => 'content/' . urlencode($relativePath),
+                    'size' => filesize($path),
+                    'modified' => date("Y-m-d H:i:s", filemtime($path))
+                ];
+                $output[] = $fileInfo;
             }
+        }
+
+        $directory = realpath($directory);
+        if (strpos($directory, realpath($this->directory)) !== 0) {
+            $this->logger->warning('Attempted directory traversal detected', ['directory' => $directory]);
+            return ['Invalid directory path'];
         }
 
         $this->logger->debug('Directory scanned.', ['directory' => $directory, 'output' => $output]);
