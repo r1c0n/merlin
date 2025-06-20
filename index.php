@@ -58,7 +58,12 @@ $displayPath = $subdirectory ? '/' . $subdirectory . '/' : '/';
                     <?php if ($subdirectory): ?>
                         <tr>
                             <td colspan="4">
-                                <a href="?dir=<?= urlencode(dirname($subdirectory)) ?>">
+                                <a href="?<?php 
+                                    $parentDir = dirname($subdirectory);
+                                    if ($parentDir !== '.') {
+                                        echo 'dir=' . urlencode($parentDir);
+                                    }
+                                ?>">
                                     📁 Parent Directory
                                 </a>
                             </td>
